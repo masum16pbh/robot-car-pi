@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Controller</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        .controls { margin: 20px; }
+        button { 
+            width: 100px; height: 50px; 
+            font-size: 20px; margin: 5px;
+        }
+        #status { margin-top: 20px; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Car Controller</h1>
+    <div class="controls">
+        <button id="up">↑ Up</button><br>
+        <button id="left">← Left</button>
+        <button id="stop">STOP</button>
+        <button id="right">→ Right</button><br>
+        <button id="down">↓ Down</button>
+    </div>
+    <div id="status">Disconnected</div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        let ws = null;
+        
+        function connect() {
+            ws = new WebSocket('ws://localhost:8000');
+            
+            ws.onopen = () => {
+                statusDiv.textContent = "Connected!";
+                statusDiv.style.color = "green";
+            };
+            
+            ws.onclose = () => {
+                statusDiv.textContent = "Disconnected";
+                statusDiv.style.color = "red";
+                setTimeout(connect, 1000);
+            };
+            
+            ws.onerror = (error) => {
+                statusDiv.textContent = "Error: " + error.message;
+                statusDiv.style.color = "red";
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log("Server response:", data);
+            };
+        }
+        
+        // Button handlers
+        document.getElementById('up').onclick = () => sendCommand('up');
+        document.getElementById('down').onclick = () => sendCommand('down');
+        document.getElementById('left').onclick = () => sendCommand('left');
+        document.getElementById('right').onclick = () => sendCommand('right');
+        document.getElementById('stop').onclick = () => sendCommand('stop');
+        
+        function sendCommand(cmd) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ command: cmd }));
+            }
+        }
+        
+        // Keyboard controls
+        document.onkeydown = (e) => {
+            switch(e.key) {
+                case 'ArrowUp': sendCommand('up'); break;
+                case 'ArrowDown': sendCommand('down'); break;
+                case 'ArrowLeft': sendCommand('left'); break;
+                case 'ArrowRight': sendCommand('right'); break;
+                case ' ': sendCommand('stop'); break;
+            }
+        };
+        
+        // Start connection
+        connect();
+    </script>
+</body>
+</html>

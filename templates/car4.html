@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Controller</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        .controls { margin: 20px; }
+        button { 
+            width: 100px; height: 50px; 
+            font-size: 20px; margin: 5px;
+        }
+        #status { margin-top: 20px; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Car Controller</h1>
+    <div class="controls">
+        <button id="up" onclick="sendCommand('up')">↑ Up</button><br>
+        <button id="left" onclick="sendCommand('left')">← Left</button>
+        <button id="stop" onclick="sendCommand('stop')">STOP</button>
+        <button id="right" onclick="sendCommand('right')">→ Right</button><br>
+        <button id="down" onclick="sendCommand('down')">↓ Down</button>
+    </div>
+    <div id="status">Disconnected</div>
+    <script>
+        //connect to socket.io server
+        const socket= io();
+        //socket.on(eventName, callback) → Listens for an event from the server or from Socket.IO internals.
+        socket.on('connect',() =>{
+            document.getElementById('status').textContent= "Connected";
+            document.getElementById('status').style.color= "green";
+        });
+
+        socket.on('disconnect',() =>{
+            document.getElementById('status').textContent="Disconnet";
+            document.getElementById('status').style.color= 'red';
+        });
+
+        function sendCommand(command){
+            socket.emit('car_command',command);
+            document.getElementById('status').textContent= 'Sent : '+command;
+
+        }
+
+        socket.on('car_response', (msg)=>{
+            document.getElementById('status').textContent= "Server : "+msg;
+        });
+    </script>
+</body>
+</html>
