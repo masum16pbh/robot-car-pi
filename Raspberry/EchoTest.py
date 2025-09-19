@@ -2,7 +2,9 @@ import RPi.GPIO as GPIO
 import time
 TRIG = 23   # GPIO23 (pin 16)
 ECHO = 24   # GPIO24 (pin 18)
-
+GPIO.setmode(GPIO.BOARD)  # Stay consistent with BOARD mode
+GPIO.setup(TRIG, GPIO.OUT)
+GPIO.setup(ECHO, GPIO.IN)
 def get_distance():
     GPIO.output(TRIG, True)
     time.sleep(0.00001)
