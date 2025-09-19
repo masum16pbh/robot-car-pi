@@ -173,6 +173,7 @@ for i in range(len(points) - 1):
     print(f"Turn {turn_direction} by {abs(turn_angle):.2f} degrees")
 
 
-
+stop()
+GPIO.cleanup()
 
 
