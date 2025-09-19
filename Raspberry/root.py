@@ -38,7 +38,7 @@ GPIO.output(LMF, GPIO.LOW)
 GPIO.output(RMA, GPIO.LOW)
 GPIO.output(LMB, GPIO.LOW)
 GPIO.output(RMB, GPIO.LOW)
-
+stop_event = threading.Event()
 
 def move_up(distance):
     global start_time,remaining_distance,velocity
@@ -102,8 +102,29 @@ def get_distance():
         stop_time = time.time()
 
     elapsed = stop_time - start_time
-    distance = (elapsed * 343) / 2  # in meter
+    distance = (elapsed * 34300) / 2  # in cm
     return distance
+
+def obstacle_monitor():
+    global remaining_distance, start_time,velocity
+    while True:
+        dist = get_distance()
+        print(f"[Sensor] Distance: {dist:.2f} cm")
+
+        if dist < 40 and not stop_event.is_set():  
+            print("⚠️ Obstacle detected! Forcing STOP.")
+            stop()
+            stop_time = time.time()
+            elasped = (stop_time - start_time)*velocity
+            stop_event.set()
+            
+        elif stop_event == set and dist >= 75:
+            stop_event.clear()
+            if remaining_distance > 0:
+                print("✅ Path clear. Resuming movement.")
+                move_up(remaining_distance)
+                
+        time.sleep(0.06)
 
 with open("pathset.txt", "r") as f:
     data = f.read()
@@ -111,6 +132,11 @@ points = []
 for line in data.split('),'):
     x, y = map(int, line.strip('() \n').split(','))
     points.append((x, y))
+
+#thread for obstacle detection
+sensor_thread = threading.Thread(target=obstacle_monitor, daemon=True)
+sensor_thread.start()
+
 
 last_angel = 0 
 for i in range(len(points) - 1):
@@ -150,26 +176,3 @@ for i in range(len(points) - 1):
 
 
 
-stop_event = threading.Event()
-
-
-def obstacle_monitor():
-    global remaining_distance, start_time,velocity
-    while True:
-        dist = get_distance()
-        print(f"[Sensor] Distance: {dist:.2f} cm")
-
-        if dist < 75 and not stop_event.is_set():  
-            print("⚠️ Obstacle detected! Forcing STOP.")
-            stop()
-            stop_time = time.time()
-            elasped = (stop_time - start_time)*velocity
-            stop_event.set()
-            
-        elif stop_event == set and dist >= 75:
-            stop_event.clear()
-            if remaining_distance > 0:
-                print("✅ Path clear. Resuming movement.")
-                move_up(remaining_distance)
-                
-        time.sleep(0.06)
